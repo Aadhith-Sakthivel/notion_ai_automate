@@ -24,10 +24,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install openai requests
           pip install google-generativeai
-          pip install reportlab requests
+          pip install reportlab
 
-
-      - name: Run Automation Script
+      - name: Run Notion Script
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GUMROAD_TOKEN: ${{ secrets.GUMROAD_TOKEN }}
@@ -35,11 +34,11 @@ jobs:
           NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}  
           PINTEREST_TOKEN: ${{ secrets.PINTEREST_TOKEN }}
           GEN_API_KEY: ${{ secrets.GEN_API_KEY }}
-
-      - name: Notion Script
         run: |
           python daily_notion_template_automation.py
 
-      - name: Planner Automation Script
+      - name: Run Planner Automation Script
+        env:
+          GUMROAD_TOKEN: ${{ secrets.GUMROAD_TOKEN }}
         run: |
           python daily_planner_automation.py
