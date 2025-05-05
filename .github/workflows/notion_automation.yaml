@@ -40,6 +40,7 @@ jobs:
       - name: Notion Script
         run: |
           python daily_notion_template_automation.py
+
       - name: Planner Automation Script
         run: |
-          daily_planner_automation.py
+          python daily_planner_automation.py
