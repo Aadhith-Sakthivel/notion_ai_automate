@@ -31,5 +31,6 @@ jobs:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}  
           PINTEREST_TOKEN: ${{ secrets.PINTEREST_TOKEN }}
+          GEN_API_KEY: ${{ secrets.GEN_API_KEY }}
         run: |
           python daily_notion_template_automation.py
