@@ -4,8 +4,8 @@ import os
 from datetime import datetime
 
 # === CONFIGURATION ===
-model = genai.GenerativeModel('gemini-pro')
 genai.configure(api_key=os.getenv("GEN_API_KEY"))  # Ensure this API key is set in your environment
+model = genai.GenerativeModel('gemini-pro')
 NOTION_API_KEY = os.getenv("NOTION_API_KEY")
 NOTION_PAGE_ID = os.getenv("NOTION_PAGE_ID")
 GUMROAD_TOKEN = os.getenv("GUMROAD_TOKEN")
