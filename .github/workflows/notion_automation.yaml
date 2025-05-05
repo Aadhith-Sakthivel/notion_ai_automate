@@ -1,6 +1,7 @@
 name: Daily Notion Template Automation
 
 on:
+  push:
   schedule:
     - cron: '0 6 * * *'  # Runs daily at 6 AM UTC
   workflow_dispatch:  # Allows manual trigger from GitHub UI
