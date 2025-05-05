@@ -5,7 +5,7 @@ from datetime import datetime
 
 # === CONFIGURATION ===
 genai.configure(api_key=os.getenv("GEN_API_KEY"))  # Ensure this API key is set in your environment
-model = genai.GenerativeModel('gemini-pro')
+#model = genai.GenerativeModel('gemini-pro')
 NOTION_API_KEY = os.getenv("NOTION_API_KEY")
 NOTION_PAGE_ID = os.getenv("NOTION_PAGE_ID")
 GUMROAD_TOKEN = os.getenv("GUMROAD_TOKEN")
@@ -42,7 +42,7 @@ def generate_template_content(topic):
     for m in models:
         print(m.name, "supports generateContent:", "generateContent" in m.supported_generation_methods)
     prompt = f"Create a full Notion template in markdown for: {topic}. Include sections, formatting, and realistic headings."
-    response = model.generate_content(prompt)
+    response = "model.generate_content(prompt)"
     return response.text
 
 # === STEP 3: Create Page in Notion with Content ===
