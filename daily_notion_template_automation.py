@@ -1,10 +1,10 @@
 import requests
-import openai
+from openai import OpenAI
 import os
 from datetime import datetime
 
 # === CONFIGURATION ===
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 NOTION_API_KEY = os.getenv("NOTION_API_KEY")
 NOTION_PAGE_ID = os.getenv("NOTION_PAGE_ID")
 GUMROAD_TOKEN = os.getenv("GUMROAD_TOKEN")
@@ -19,17 +19,18 @@ headers_notion = {
 # === STEP 1: Generate a Trending Topic Using OpenAI ===
 def get_trending_topic():
     prompt = "Give me one trending productivity or lifestyle digital template idea people are searching for today."
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.7
+    response = client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[{"role": "user", "content": "your prompt"}],
+    temperature=0.7
     )
+    print(response.choices[0].message.content)
     return response.choices[0].message['content'].strip().replace('"', '')
 
 # === STEP 2: Generate Notion Template Content ===
 def generate_template_content(topic):
     prompt = f"Create a full Notion template in markdown for: {topic}. Include sections, formatting, and realistic headings."
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7
