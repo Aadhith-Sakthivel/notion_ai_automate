@@ -37,6 +37,10 @@ def get_trending_topic():
 
 # === STEP 2: Generate Notion Template Content ===
 def generate_template_content(topic):
+    models = genai.list_models()
+
+    for m in models:
+        print(m.name, "supports generateContent:", "generateContent" in m.supported_generation_methods)
     prompt = f"Create a full Notion template in markdown for: {topic}. Include sections, formatting, and realistic headings."
     response = model.generate_content(prompt)
     return response.text
