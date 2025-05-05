@@ -1,10 +1,11 @@
 import requests
-from openai import OpenAI
+import google.generativeai as genai
 import os
 from datetime import datetime
 
 # === CONFIGURATION ===
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+model = genai.GenerativeModel('gemini-pro')
+genai.configure(api_key=os.getenv("GEN_API_KEY"))  # Ensure this API key is set in your environment
 NOTION_API_KEY = os.getenv("NOTION_API_KEY")
 NOTION_PAGE_ID = os.getenv("NOTION_PAGE_ID")
 GUMROAD_TOKEN = os.getenv("GUMROAD_TOKEN")
@@ -18,24 +19,27 @@ headers_notion = {
 
 # === STEP 1: Generate a Trending Topic Using OpenAI ===
 def get_trending_topic():
-    prompt = "Give me one trending productivity or lifestyle digital template idea people are searching for today."
-    response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
-    messages=[{"role": "user", "content": "your prompt"}],
-    temperature=0.7
-    )
-    print(response.choices[0].message.content)
-    return response.choices[0].message['content'].strip().replace('"', '')
+    topics = [
+        "All-in-One Life OS", "Second Brain System", "Daily Planner + Habit Tracker",
+        "Goal Setting + Vision Board", "Weekly Review System", "Time Blocking Planner",
+        "Yearly Reflection Journal", "Freelancer Business Hub", "Client CRM + Invoice Tracker",
+        "Content Creator Dashboard", "Social Media Content Planner", "Etsy/Digital Product Launch Planner",
+        "Affiliate Income + Link Tracker", "Notion Website / Portfolio Builder", "Project & Task Management System",
+        "Student Life Planner", "Assignment & Deadline Tracker", "Study Planner (Pomodoro + Revision)",
+        "Class & Exam Schedule", "Thesis/Dissertation Tracker", "Ultimate Budget Tracker",
+        "Subscription + Bill Tracker", "Debt Payoff Planner", "Investment Tracker", "Savings Goal Tracker",
+        "Mental Health & Mood Tracker", "Fitness & Meal Plan Dashboard", "Gratitude Journal", "Sleep & Wellness Log",
+        "Book & Learning Tracker"
+    ]
+    today = datetime.utcnow().day
+    topic = topics[(today - 1) % len(topics)]
+    return topic
 
 # === STEP 2: Generate Notion Template Content ===
 def generate_template_content(topic):
     prompt = f"Create a full Notion template in markdown for: {topic}. Include sections, formatting, and realistic headings."
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.7
-    )
-    return response.choices[0].message['content']
+    response = model.generate_content(prompt)
+    return response.text
 
 # === STEP 3: Create Page in Notion with Content ===
 def create_notion_page(title, content):
@@ -64,10 +68,10 @@ def create_notion_page(title, content):
 
     res = requests.post(url, headers=headers_notion, json=payload)
     if res.status_code in [200, 201]:
-        print(" Notion page created.")
+        print("Notion page created successfully.")
         return res.json().get("url", "https://notion.so")
     else:
-        print(" Failed to create Notion page:", res.text)
+        print("Failed to create Notion page:", res.text)
         return "https://notion.so"
 
 # === STEP 4: Upload Template to Gumroad ===
@@ -88,26 +92,25 @@ def upload_to_gumroad(title, description, content):
         "Content-Type": "application/json"
     }
 
-    # Gumroad API does not support direct product upload without manual file or approval
-    # Simulate successful creation
-    print(f" Simulated Gumroad upload for '{title}'.")
-    return f"https://gumroad.com/l/{title.lower().replace(' ', '-')}"
+    # Simulating Gumroad product creation as the Gumroad API does not support direct file uploads in this manner
+    print(f"Simulated Gumroad upload for '{title}'.")
+    return f"https://gumroad.com/l/{title.lower().replace(' ', '-')}"  # Simulated link
 
 # === STEP 5: Generate Image (Mocked) ===
 def generate_pin_image(title):
     filename = f"pin_{title.replace(' ', '_')}.png"
     with open(filename, 'w') as f:
-        f.write("Mock Pinterest image")
+        f.write("Mock Pinterest image")  # In reality, you'd generate an actual image here
     return filename
 
 # === STEP 6: Post to Pinterest (Mocked) ===
 def post_to_pinterest(image_path, title, url):
-    print(f" Posted to Pinterest: {title} → {url} (Mocked, implement API if needed)")
+    print(f"Posted to Pinterest: {title} → {url} (Mocked, implement actual API if needed)")
 
 # === MAIN RUN ===
 def main():
     topic = get_trending_topic()
-    print(f" Trending Topic: {topic}")
+    print(f"Trending Topic: {topic}")
     content = generate_template_content(topic)
     notion_url = create_notion_page(topic, content)
     gumroad_url = upload_to_gumroad(topic, "Free auto-generated Notion template", content)

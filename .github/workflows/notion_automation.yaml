@@ -3,11 +3,12 @@ name: Daily Notion Template Automation
 on:
   schedule:
     - cron: '0 6 * * *'  # Runs daily at 6 AM UTC
-  workflow_dispatch:
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
 
 jobs:
   generate-and-post:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -21,6 +22,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install openai requests
+          pip install google-generativeai
 
       - name: Run Automation Script
         env:
