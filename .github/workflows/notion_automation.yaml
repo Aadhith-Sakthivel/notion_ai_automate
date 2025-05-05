@@ -24,6 +24,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install openai requests
           pip install google-generativeai
+          pip install google-generativeai reportlab requests python-dotenv
+          pip install reportlab requests
+
 
       - name: Run Automation Script
         env:
@@ -33,5 +36,10 @@ jobs:
           NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}  
           PINTEREST_TOKEN: ${{ secrets.PINTEREST_TOKEN }}
           GEN_API_KEY: ${{ secrets.GEN_API_KEY }}
+
+      - name: Notion Script
         run: |
           python daily_notion_template_automation.py
+      - name: Planner Automation Script
+        run: |
+          daily_planner_automation.py
