@@ -48,7 +48,7 @@ jobs:
 
       - name: Run Planner Automation Script
         env:
-          GUMROAD_EMAIL: ${{ secrets.GUMROAD_EMAIL }}
+          GUMROAD_EMAIL: ${{ secrets.EMAIL }}
           GUMROAD_PASSWORD: ${{ secrets.GUMROAD_PASSWORD }}
         run: |
           python daily_planner_automation.py
