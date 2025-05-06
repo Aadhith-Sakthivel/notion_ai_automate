@@ -60,18 +60,22 @@ def upload_to_gumroad(pdf_path, title, price):
         print("🔐 Logging into Gumroad...")
         driver.get("https://gumroad.com/login")
         time.sleep(3)
-        driver.find_element(By.NAME, "user[email]").send_keys(EMAIL)
-        driver.find_element(By.NAME, "user[password]").send_keys(PASSWORD)
-        driver.find_element(By.NAME, "commit").click()
+
+        # Fill in login credentials using updated IDs
+        driver.find_element(By.ID, ":R0:-email").send_keys(EMAIL)
+        driver.find_element(By.ID, ":R0:-password").send_keys(PASSWORD)
+
+        # Click the login button
+        driver.find_element(By.XPATH, "//button[contains(text(), 'Login')]").click()
         time.sleep(5)
 
         print("🛒 Creating new product...")
         driver.get("https://gumroad.com/products/new")
         time.sleep(4)
 
-        driver.find_element(By.NAME, "product[name]").send_keys(title)
+        driver.find_element(By.CSS_SELECTOR, "input[placeholder='Name of product']").send_keys(title)
 
-        price_input = driver.find_element(By.NAME, "product[price]")
+        price_input = driver.find_element(By.CSS_SELECTOR, "input[placeholder='Price your product']")
         price_input.clear()
         price_input.send_keys(str(price))
 
