@@ -1,6 +1,8 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import os
 import time
 import datetime
@@ -73,16 +75,25 @@ def upload_to_gumroad(pdf_path, title, price):
         driver.get("https://gumroad.com/products/new")
         time.sleep(4)
 
-        driver.find_element(By.CSS_SELECTOR, "input[placeholder='Name of product']").send_keys(title)
+        # Wait until the "Name of product" input field is visible
+        product_name_input = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "input[placeholder='Name of product']"))
+        )
+        product_name_input.send_keys(title)
 
-        price_input = driver.find_element(By.CSS_SELECTOR, "input[placeholder='Price your product']")
+        # Wait until the "Price your product" input field is visible
+        price_input = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "input[placeholder='Price your product']"))
+        )
         price_input.clear()
         price_input.send_keys(str(price))
 
+        # Upload PDF
         upload_input = driver.find_element(By.NAME, "product[file_uploads][]")
         upload_input.send_keys(os.path.abspath(pdf_path))
         time.sleep(8)
 
+        # Publish the product
         publish_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Publish')]")
         driver.execute_script("arguments[0].scrollIntoView();", publish_button)
         time.sleep(1)
