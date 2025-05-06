@@ -44,12 +44,20 @@ def upload_to_gumroad(pdf_path, title, price):
     EMAIL = os.getenv("GUMROAD_EMAIL")
     PASSWORD = os.getenv("GUMROAD_PASSWORD")
 
+    if not EMAIL or not PASSWORD:
+        print("❌ GUMROAD_EMAIL or GUMROAD_PASSWORD not set in environment.")
+        return
+
     options = Options()
     options.add_argument("--headless=new")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.binary_location = os.getenv("CHROME_BIN", "/usr/bin/google-chrome")
+
     driver = webdriver.Chrome(options=options)
 
     try:
-        # Login
+        print("🔐 Logging into Gumroad...")
         driver.get("https://gumroad.com/login")
         time.sleep(3)
         driver.find_element(By.NAME, "user[email]").send_keys(EMAIL)
@@ -57,24 +65,20 @@ def upload_to_gumroad(pdf_path, title, price):
         driver.find_element(By.NAME, "commit").click()
         time.sleep(5)
 
-        # Go to new product
+        print("🛒 Creating new product...")
         driver.get("https://gumroad.com/products/new")
         time.sleep(4)
 
-        # Title
         driver.find_element(By.NAME, "product[name]").send_keys(title)
 
-        # Price
         price_input = driver.find_element(By.NAME, "product[price]")
         price_input.clear()
         price_input.send_keys(str(price))
 
-        # Upload PDF
         upload_input = driver.find_element(By.NAME, "product[file_uploads][]")
         upload_input.send_keys(os.path.abspath(pdf_path))
         time.sleep(8)
 
-        # Click Publish
         publish_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Publish')]")
         driver.execute_script("arguments[0].scrollIntoView();", publish_button)
         time.sleep(1)
