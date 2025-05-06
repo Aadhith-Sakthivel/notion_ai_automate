@@ -49,10 +49,10 @@ def upload_to_gumroad(pdf_path, title, price):
         return
 
     options = Options()
-    options.add_argument("--headless")  # Run in headless mode
+    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--user-data-dir=/tmp/chrome-user-data")  # Set a unique user data directory
+    options.add_argument(f"--user-data-dir=/tmp/chrome-user-data-{int(time.time())}")  # Unique per session
     options.binary_location = os.getenv("CHROME_BIN", "/usr/bin/google-chrome")
 
     driver = webdriver.Chrome(options=options)
@@ -62,19 +62,22 @@ def upload_to_gumroad(pdf_path, title, price):
         driver.get("https://gumroad.com/login")
         time.sleep(3)
 
-        # Fill in login credentials using updated IDs
-        driver.find_element(By.ID, ":R0:-email").send_keys(EMAIL)
-        driver.find_element(By.ID, ":R0:-password").send_keys(PASSWORD)
+        # Use email/password input by placeholder or label since ID might be dynamic
+        email_input = driver.find_element(By.CSS_SELECTOR, "input[type='email']")
+        password_input = driver.find_element(By.CSS_SELECTOR, "input[type='password']")
+        email_input.send_keys(EMAIL)
+        password_input.send_keys(PASSWORD)
 
-        # Click the login button
-        driver.find_element(By.XPATH, "//button[contains(text(), 'Login')]").click()
+        driver.find_element(By.XPATH, "//button[contains(text(), 'Log in')]").click()
         time.sleep(5)
 
         print("🛒 Creating new product...")
         driver.get("https://gumroad.com/products/new")
-        time.sleep(4)
+        time.sleep(5)
 
-        driver.find_element(By.NAME, "product[name]").send_keys(title)
+        # Ensure product name input is loaded
+        title_input = driver.find_element(By.CSS_SELECTOR, "input[placeholder='Name of product']")
+        title_input.send_keys(title)
 
         price_input = driver.find_element(By.NAME, "product[price]")
         price_input.clear()
