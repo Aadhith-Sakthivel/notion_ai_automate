@@ -25,6 +25,15 @@ jobs:
           pip install openai requests
           pip install google-generativeai
           pip install reportlab
+          pip install selenium
+
+      - name: Set up Chrome for Selenium
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-chromedriver
+          sudo ln -s /usr/lib/chromium-browser/chromedriver /usr/bin/chromedriver
+          export CHROME_BIN=chromium-browser
+          export PATH=$PATH:/usr/lib/chromium-browser/
 
       - name: Run Notion Script
         env:
@@ -39,6 +48,7 @@ jobs:
 
       - name: Run Planner Automation Script
         env:
-          GUMROAD_TOKEN: ${{ secrets.GUMROAD_TOKEN }}
+          GUMROAD_EMAIL: ${{ secrets.GUMROAD_EMAIL }}
+          GUMROAD_PASSWORD: ${{ secrets.GUMROAD_PASSWORD }}
         run: |
           python daily_planner_automation.py

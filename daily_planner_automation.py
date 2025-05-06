@@ -1,32 +1,29 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 import os
+import time
 import datetime
+from dotenv import load_dotenv
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
-import requests
+
+load_dotenv()
 
 def create_planner_pdf(filename):
     today = datetime.date.today().strftime('%A, %B %d, %Y')
     c = canvas.Canvas(filename, pagesize=A4)
     width, height = A4
 
-    # Title
     c.setFont("Helvetica-Bold", 24)
     c.drawCentredString(width / 2, height - 50, "Daily Planner")
-
-    # Date
     c.setFont("Helvetica", 14)
     c.drawCentredString(width / 2, height - 80, today)
 
-    # Sections
     y = height - 130
     sections = [
-        "☀️ Morning Routine:",
-        "📋 To-Do List:",
-        "📞 Appointments:",
-        "🍱 Meals:",
-        "💧 Water Intake:",
-        "🧘 Self-Care:",
-        "🌙 Evening Reflection:"
+        "☀️ Morning Routine:", "📋 To-Do List:", "📞 Appointments:",
+        "🍱 Meals:", "💧 Water Intake:", "🧘 Self-Care:", "🌙 Evening Reflection:"
     ]
 
     c.setFont("Helvetica-Bold", 12)
@@ -43,76 +40,61 @@ def create_planner_pdf(filename):
     c.save()
     print(f"✅ PDF created at {filename}")
 
-def create_gumroad_product(title, description, price, token):
-    url = "https://api.gumroad.com/v2/products"
-    payload = {
-        "name": title,
-        "description": description,
-        "price": int(float(price) * 100),  # in cents
-        "published": False
-    }
+def upload_to_gumroad(pdf_path, title, price):
+    EMAIL = os.getenv("GUMROAD_EMAIL")
+    PASSWORD = os.getenv("GUMROAD_PASSWORD")
 
-    headers = {
-        "Authorization": f"Bearer {token}"
-    }
-
-    response = requests.post(url, data=payload, headers=headers)
-
-    print(f"📡 Gumroad response code: {response.status_code}")
-    print(f"📡 Gumroad response body: {response.text}")
+    options = Options()
+    options.add_argument("--headless=new")
+    driver = webdriver.Chrome(options=options)
 
     try:
-        res = response.json()
-    except requests.exceptions.JSONDecodeError:
-        print("❌ Failed to decode Gumroad response as JSON.")
-        raise
+        # Login
+        driver.get("https://gumroad.com/login")
+        time.sleep(3)
+        driver.find_element(By.NAME, "user[email]").send_keys(EMAIL)
+        driver.find_element(By.NAME, "user[password]").send_keys(PASSWORD)
+        driver.find_element(By.NAME, "commit").click()
+        time.sleep(5)
 
-    if not res.get("success"):
-        raise Exception(f"❌ Gumroad API error: {res}")
+        # Go to new product
+        driver.get("https://gumroad.com/products/new")
+        time.sleep(4)
 
-    product_id = res["product"]["id"]
-    print(f"✅ Created Gumroad product with ID: {product_id}")
-    return product_id
+        # Title
+        driver.find_element(By.NAME, "product[name]").send_keys(title)
 
-def upload_file_to_gumroad(product_id, file_path, token):
-    url = f"https://api.gumroad.com/v2/products/{product_id}/files"
-    files = {'file': open(file_path, 'rb')}
-    data = {'name': os.path.basename(file_path)}
+        # Price
+        price_input = driver.find_element(By.NAME, "product[price]")
+        price_input.clear()
+        price_input.send_keys(str(price))
 
-    headers = {
-        "Authorization": f"Bearer {token}"
-    }
+        # Upload PDF
+        upload_input = driver.find_element(By.NAME, "product[file_uploads][]")
+        upload_input.send_keys(os.path.abspath(pdf_path))
+        time.sleep(8)
 
-    response = requests.post(url, files=files, data=data, headers=headers)
+        # Click Publish
+        publish_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Publish')]")
+        driver.execute_script("arguments[0].scrollIntoView();", publish_button)
+        time.sleep(1)
+        publish_button.click()
+        time.sleep(5)
 
-    print(f"📡 Upload file response: {response.status_code}")
-    print(f"📡 Upload response body: {response.text}")
-
-    try:
-        res = response.json()
-    except requests.exceptions.JSONDecodeError:
-        print("❌ File upload failed: response not JSON.")
-        raise
-
-    if not res.get("success"):
-        raise Exception(f"❌ File upload failed: {res}")
-
-    print("✅ File uploaded to Gumroad")
+        print("✅ Successfully uploaded and published product to Gumroad.")
+    except Exception as e:
+        print("❌ Error during Gumroad automation:", e)
+    finally:
+        driver.quit()
 
 def main():
     filename = f"daily_planner_{datetime.date.today()}.pdf"
     create_planner_pdf(filename)
 
     title = f"Daily Planner - {datetime.date.today().strftime('%b %d, %Y')}"
-    description = "A printable daily planner to help you stay organized and mindful throughout your day."
     price = 5.00
 
-    gumroad_token = os.getenv("GUMROAD_TOKEN")
-    if not gumroad_token:
-        raise EnvironmentError("❌ GUMROAD_TOKEN not found in environment variables")
-
-    product_id = create_gumroad_product(title, description, price, gumroad_token)
-    upload_file_to_gumroad(product_id, filename, gumroad_token)
+    upload_to_gumroad(filename, title, price)
 
 if __name__ == "__main__":
     main()
