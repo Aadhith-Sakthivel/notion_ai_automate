@@ -30,10 +30,9 @@ jobs:
       - name: Set up Chrome for Selenium
         run: |
           sudo apt-get update
-          sudo apt-get install -y chromium-chromedriver
-          sudo ln -s /usr/lib/chromium-browser/chromedriver /usr/bin/chromedriver
-          export CHROME_BIN=chromium-browser
-          export PATH=$PATH:/usr/lib/chromium-browser/
+          sudo apt-get install -y chromium-browser chromium-chromedriver
+          echo "CHROME_BIN=$(which chromium-browser)" >> $GITHUB_ENV
+          echo "PATH=$PATH:$(dirname $(which chromedriver))" >> $GITHUB_ENV
 
       - name: Run Notion Script
         env:
