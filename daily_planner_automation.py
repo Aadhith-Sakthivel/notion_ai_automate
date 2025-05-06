@@ -51,7 +51,6 @@ def upload_to_gumroad(pdf_path, title, price):
         return
 
     options = Options()
-    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.binary_location = os.getenv("CHROME_BIN", "/usr/bin/google-chrome")
@@ -75,26 +74,34 @@ def upload_to_gumroad(pdf_path, title, price):
         driver.get("https://gumroad.com/products/new")
         time.sleep(4)
 
-        # Wait until the "Name of product" input field is visible
+        # Wait for "Name of product" input field
+        print("Waiting for 'Name of product' input field...")
         product_name_input = WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, "input[placeholder='Name of product']"))
         )
         product_name_input.send_keys(title)
 
-        # Wait until the "Price your product" input field is visible
+        # Wait for "Price your product" input field
+        print("Waiting for 'Price your product' input field...")
         price_input = WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, "input[placeholder='Price your product']"))
         )
         price_input.clear()
         price_input.send_keys(str(price))
 
-        # Upload PDF
-        upload_input = driver.find_element(By.NAME, "product[file_uploads][]")
+        # Wait for the file upload input to appear
+        print("Waiting for file upload input...")
+        upload_input = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.NAME, "product[file_uploads][]"))
+        )
         upload_input.send_keys(os.path.abspath(pdf_path))
         time.sleep(8)
 
-        # Publish the product
-        publish_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Publish')]")
+        # Wait for the Publish button and click it
+        print("Waiting for 'Publish' button...")
+        publish_button = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Publish')]"))
+        )
         driver.execute_script("arguments[0].scrollIntoView();", publish_button)
         time.sleep(1)
         publish_button.click()
