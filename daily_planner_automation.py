@@ -1,8 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 import os
 import time
 import datetime
@@ -51,8 +49,10 @@ def upload_to_gumroad(pdf_path, title, price):
         return
 
     options = Options()
+    options.add_argument("--headless")  # Run in headless mode
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--user-data-dir=/tmp/chrome-user-data")  # Set a unique user data directory
     options.binary_location = os.getenv("CHROME_BIN", "/usr/bin/google-chrome")
 
     driver = webdriver.Chrome(options=options)
@@ -74,34 +74,17 @@ def upload_to_gumroad(pdf_path, title, price):
         driver.get("https://gumroad.com/products/new")
         time.sleep(4)
 
-        # Wait for "Name of product" input field
-        print("Waiting for 'Name of product' input field...")
-        product_name_input = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "input[placeholder='Name of product']"))
-        )
-        product_name_input.send_keys(title)
+        driver.find_element(By.NAME, "product[name]").send_keys(title)
 
-        # Wait for "Price your product" input field
-        print("Waiting for 'Price your product' input field...")
-        price_input = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "input[placeholder='Price your product']"))
-        )
+        price_input = driver.find_element(By.NAME, "product[price]")
         price_input.clear()
         price_input.send_keys(str(price))
 
-        # Wait for the file upload input to appear
-        print("Waiting for file upload input...")
-        upload_input = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.NAME, "product[file_uploads][]"))
-        )
+        upload_input = driver.find_element(By.NAME, "product[file_uploads][]")
         upload_input.send_keys(os.path.abspath(pdf_path))
         time.sleep(8)
 
-        # Wait for the Publish button and click it
-        print("Waiting for 'Publish' button...")
-        publish_button = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Publish')]"))
-        )
+        publish_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Publish')]")
         driver.execute_script("arguments[0].scrollIntoView();", publish_button)
         time.sleep(1)
         publish_button.click()
