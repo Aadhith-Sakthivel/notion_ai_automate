@@ -49,6 +49,7 @@ jobs:
           NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}  
           PINTEREST_TOKEN: ${{ secrets.PINTEREST_TOKEN }}
           GEN_API_KEY: ${{ secrets.GEN_API_KEY }}
+
         run: |
           python daily_notion_template_automation.py
 
@@ -56,5 +57,7 @@ jobs:
         env:
           GUMROAD_EMAIL: ${{ secrets.EMAIL }}
           GUMROAD_PASSWORD: ${{ secrets.GUMROAD_PASSWORD }}
+          DROPBOX_ACCESS_TOKEN: ${{ secrets.DROPBOX_ACCESS_TOKEN }}
+          DROPBOX_UPLOAD_FOLDER: ${{ secrets.DROPBOX_UPLOAD_FOLDER }}
         run: |
           python daily_planner_automation.py

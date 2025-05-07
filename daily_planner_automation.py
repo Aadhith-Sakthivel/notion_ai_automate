@@ -1,9 +1,6 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
 import os
-import time
 import datetime
+import requests
 from dotenv import load_dotenv
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
@@ -40,73 +37,35 @@ def create_planner_pdf(filename):
     c.save()
     print(f"✅ PDF created at {filename}")
 
-def upload_to_gumroad(pdf_path, title, price):
-    EMAIL = os.getenv("GUMROAD_EMAIL")
-    PASSWORD = os.getenv("GUMROAD_PASSWORD")
+def upload_to_dropbox(file_path):
+    access_token = os.getenv("DROPBOX_ACCESS_TOKEN")
+    folder_path = os.getenv("DROPBOX_UPLOAD_FOLDER", "/")
+    filename = os.path.basename(file_path)
+    dropbox_path = f"{folder_path}/{filename}"
 
-    if not EMAIL or not PASSWORD:
-        print("❌ GUMROAD_EMAIL or GUMROAD_PASSWORD not set in environment.")
-        return
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/octet-stream",
+        "Dropbox-API-Arg": str({
+            "path": dropbox_path,
+            "mode": "add",
+            "autorename": True,
+            "mute": False
+        }).replace("'", '"')  # Dropbox expects double quotes
+    }
 
-    options = Options()
-    options.add_argument("--headless=new")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument(f"--user-data-dir=/tmp/chrome-user-data-{int(time.time())}")  # Unique per session
-    options.binary_location = os.getenv("CHROME_BIN", "/usr/bin/google-chrome")
+    with open(file_path, "rb") as f:
+        response = requests.post("https://content.dropboxapi.com/2/files/upload", headers=headers, data=f)
 
-    driver = webdriver.Chrome(options=options)
-
-    try:
-        print("🔐 Logging into Gumroad...")
-        driver.get("https://gumroad.com/login")
-        time.sleep(3)
-
-        # Use email/password input by placeholder or label since ID might be dynamic
-        email_input = driver.find_element(By.CSS_SELECTOR, "input[type='email']")
-        password_input = driver.find_element(By.CSS_SELECTOR, "input[type='password']")
-        email_input.send_keys(EMAIL)
-        password_input.send_keys(PASSWORD)
-
-        driver.find_element(By.XPATH, "//button[contains(text(), 'Log in')]").click()
-        time.sleep(5)
-
-        print("🛒 Creating new product...")
-        driver.get("https://gumroad.com/products/new")
-        time.sleep(5)
-
-        # Ensure product name input is loaded
-        title_input = driver.find_element(By.CSS_SELECTOR, "input[placeholder='Name of product']")
-        title_input.send_keys(title)
-
-        price_input = driver.find_element(By.NAME, "product[price]")
-        price_input.clear()
-        price_input.send_keys(str(price))
-
-        upload_input = driver.find_element(By.NAME, "product[file_uploads][]")
-        upload_input.send_keys(os.path.abspath(pdf_path))
-        time.sleep(8)
-
-        publish_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Publish')]")
-        driver.execute_script("arguments[0].scrollIntoView();", publish_button)
-        time.sleep(1)
-        publish_button.click()
-        time.sleep(5)
-
-        print("✅ Successfully uploaded and published product to Gumroad.")
-    except Exception as e:
-        print("❌ Error during Gumroad automation:", e)
-    finally:
-        driver.quit()
+    if response.status_code == 200:
+        print("✅ Successfully uploaded to Dropbox.")
+    else:
+        print("❌ Dropbox upload failed:", response.text)
 
 def main():
     filename = f"daily_planner_{datetime.date.today()}.pdf"
     create_planner_pdf(filename)
-
-    title = f"Daily Planner - {datetime.date.today().strftime('%b %d, %Y')}"
-    price = 5.00
-
-    upload_to_gumroad(filename, title, price)
+    upload_to_dropbox(filename)
 
 if __name__ == "__main__":
     main()
